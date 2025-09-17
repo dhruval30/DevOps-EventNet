@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # The Node.js/Express Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: eventnet-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the local server code into the container for live-reloading
+      # Any change you make in ./server on your machine will be reflected in the container
+      - ./server:/app
+      # Anonymize node_modules to prevent local dependencies from overwriting container dependencies
+      - /app/node_modules
+    networks:
+      - eventnet-network
+    depends_on:
+      - database
+    env_file:
+      - server/.env # Tells this service to use the .env file
+
+  # The React/Vite Client
+  client:
+    # We use a simple Node image here to run the Vite dev server for hot-reloading
+    # The Nginx Dockerfile is for production builds, not local development.
+    image: node:20-alpine
+    container_name: eventnet-client
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    working_dir: /app
+    volumes:
+      # Mount the local client code into the container for live-reloading
+      - ./client:/app
+      # Anonymize node_modules
+      - /app/node_modules
+    networks:
+      - eventnet-network
+    # Command to install dependencies and start the Vite dev server
+    command: sh -c "npm install && npm run dev -- --host"
+
+  # The MongoDB Database
+  database:
+    image: mongo:latest
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017" # Expose DB port to the host machine for tools like MongoDB Compass
+    volumes:
+      - mongo-data:/data/db # Persist database data
+    networks:
+      - eventnet-network
+
+# Define the network for services to communicate
+networks:
+  eventnet-network:
+    driver: bridge
+
+# Define the named volume for data persistence
+volumes:
+  mongo-data:
