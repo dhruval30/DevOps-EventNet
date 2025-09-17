@@ -72,6 +72,7 @@ pipeline {
         stage('Run ZAP Security Scan') {
             steps {
                 script {
+                    env.PATH = "/Applications/Docker.app/Contents/Resources/bin:${env.PATH}"
                     echo "--- Running ZAP Baseline Scan ---"
                     // This command runs the official ZAP Docker container
                     sh '''
