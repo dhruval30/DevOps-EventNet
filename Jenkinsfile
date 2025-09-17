@@ -67,6 +67,29 @@ pipeline {
                 }
             }
         }
+
+        // --- NEW STAGE: OWASP ZAP SECURITY SCAN ---
+        stage('Run ZAP Security Scan') {
+            steps {
+                script {
+                    echo "--- Running ZAP Baseline Scan ---"
+                    // This command runs the official ZAP Docker container
+                    sh '''
+                        docker run --rm \\
+                            -v $(pwd):/zap/wrk/:rw \\
+                            owasp/zap2docker-stable zap-baseline.py \\
+                            -t http://host.docker.internal:3000 \\
+                            -r zap-report.html
+                    '''
+                }
+            }
+            // This post-stage action saves the ZAP report as a build artifact
+            post {
+                always {
+                    archiveArtifacts artifacts: '**/zap-report.html', allowEmptyArchive: true
+                }
+            }
+        }
     }
 
     // This 'post' block runs after all stages are complete
