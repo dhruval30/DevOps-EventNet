@@ -1,5 +1,11 @@
 pipeline {
     agent any
+    environment {
+        MONGODB_URI        = credentials('MONGODB_URI')
+        EMAIL_SERVICE_USER = credentials('EMAIL_SERVICE_USER')
+        EMAIL_SERVICE_PASS = credentials('EMAIL_SERVICE_PASS')
+        CSRF_SECRET         = credentials('CSRF_SECRET')
+    }
 
     stages {
         stage('Unit and Integration Tests') {
@@ -74,11 +80,10 @@ pipeline {
                 script {
                     env.PATH = "/Applications/Docker.app/Contents/Resources/bin:${env.PATH}"
                     echo "--- Running ZAP Baseline Scan ---"
-                    // This command runs the official ZAP Docker container
                     sh '''
                         docker run --rm \\
                             -v $(pwd):/zap/wrk/:rw \\
-                            owasp/zap2docker-stable zap-baseline.py \\
+                            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \\
                             -t http://host.docker.internal:3000 \\
                             -r zap-report.html
                     '''
