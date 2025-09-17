@@ -2,11 +2,9 @@ pipeline {
     agent any
 
     stages {
-        // --- Your original stage, kept exactly as requested ---
         stage('Unit and Integration Tests') {
             steps {
                 script {
-                    // Set PATH to include nvm Node.js location for this stage
                     env.PATH = "/Users/dhruval/.nvm/versions/node/v20.19.5/bin:${env.PATH}"
                     
                     // Test client
@@ -29,7 +27,6 @@ pipeline {
         stage('Build & Run App for E2E Testing') {
             steps {
                 script {
-                    // We must also set the PATH here so this stage can find npm
                     env.PATH = "/Users/dhruval/.nvm/versions/node/v20.19.5/bin:${env.PATH}"
 
                     echo "--- Installing client dependencies ---"
@@ -60,7 +57,6 @@ pipeline {
                 // This 'xvfb' block creates a virtual screen for the browser
                 xvfb {
                     script {
-                        // And we set the PATH one more time for this stage to find npx
                         env.PATH = "/Users/dhruval/.nvm/versions/node/v20.19.5/bin:${env.PATH}"
                         
                         dir('client') {
