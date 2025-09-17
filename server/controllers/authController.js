@@ -8,15 +8,6 @@ const bcrypt = require('bcryptjs');
 const Event = require('../models/Event');
 const mongoose = require('mongoose');
 
-// Function to send OTP via email
-const transporter = nodemailer.createTransport({
-  service: 'gmail', // or your email service provider
-  auth: {
-    user: process.env.EMAIL_SERVICE_USER,
-    pass: process.env.EMAIL_SERVICE_PASS,
-  },
-});
-
 exports.registerUser = async (req, res) => {
   // Check for validation errors from express-validator
   const errors = validationResult(req);
@@ -81,6 +72,9 @@ exports.registerUser = async (req, res) => {
             existingUser.save(),
             newOtp.save()
         ]);
+
+        
+
         
         const mailOptions = {
             from: process.env.EMAIL_SERVICE_USER,
@@ -109,6 +103,14 @@ exports.registerUser = async (req, res) => {
     }
     
     // If no user exists, proceed with new registration.
+    // Function to send OTP via email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // or your email service provider
+      auth: {
+        user: process.env.EMAIL_SERVICE_USER,
+        pass: process.env.EMAIL_SERVICE_PASS,
+      },
+    });
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
       name,
@@ -159,6 +161,7 @@ exports.registerUser = async (req, res) => {
     });
 
   } catch (error) {
+    console.error('REGISTRATION CRASHED. THE REAL ERROR IS:', error); 
     res.status(500).json({ message: 'Server error during registration.' });
   }
 };
