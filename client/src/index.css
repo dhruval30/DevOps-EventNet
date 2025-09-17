@@ -1,0 +1,12 @@
+@import "tailwindcss"; 
+@import "tw-animate-css"; 
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure dark mode works properly */
+.dark {
+  color-scheme: dark;
+}
