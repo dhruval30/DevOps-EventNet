@@ -5,20 +5,16 @@ pipeline {
         stage('Unit and Integration Tests') {
             steps {
                 script {
+                    // Test client
                     dir('client') {
-                        // This step will automatically find and use Node v20
-                        nvm('20') {
-                            sh 'npm ci'
-                            sh 'npm test'
-                        }
+                        sh 'npm ci'
+                        sh 'npm test'
                     }
                     
+                    // Test server
                     dir('server') {
-                        // This step will automatically find and use Node v20
-                        nvm('20') {
-                            sh 'npm ci --only=production'
-                            sh 'npm test'
-                        }
+                        sh 'npm ci --only=production'
+                        sh 'npm test'
                     }
                 }
             }
