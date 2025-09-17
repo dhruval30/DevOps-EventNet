@@ -171,7 +171,9 @@ export default function JoinEvent({ isOpen, onClose, csrfToken, onRegistrationSu
       }
 
       setSuccessMessage(data.message);
-      onRegistrationSuccess(formData.email);
+      setTimeout(() => {
+        onRegistrationSuccess(formData.email);
+      }, 2000); 
 
     } catch (err) {
       setError(err.message || "Failed to submit form.");
