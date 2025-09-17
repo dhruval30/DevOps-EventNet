@@ -16,7 +16,7 @@ pipeline {
                     
                     // Test server
                     dir('server') {
-                        sh 'npm ci --only=production'
+                        sh 'npm ci'
                         sh 'npm test'
                     }
                 }
