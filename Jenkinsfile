@@ -7,14 +7,14 @@ pipeline {
                 script {
                     // Test client
                     dir('client') {
-                        sh 'npm ci'
-                        sh 'npm test'
+                        sh '/usr/local/bin/npm ci'
+                        sh '/usr/local/bin/npm test'
                     }
                     
                     // Test server
                     dir('server') {
-                        sh 'npm ci --only=production'
-                        sh 'npm test'
+                        sh '/usr/local/bin/npm ci --only=production'
+                        sh '/usr/local/bin/npm test'
                     }
                 }
             }
