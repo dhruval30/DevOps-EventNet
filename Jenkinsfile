@@ -61,7 +61,6 @@ pipeline {
         stage('Run Cypress E2E Tests') {
             steps {
                 // This 'xvfb' block creates a virtual screen for the browser
-                xvfb {
                     script {
                         env.PATH = "/Users/dhruval/.nvm/versions/node/v20.19.5/bin:${env.PATH}"
                         
@@ -70,7 +69,6 @@ pipeline {
                             sh 'npx cypress run --browser chrome'
                         }
                     }
-                }
             }
         }
 
