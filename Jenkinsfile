@@ -2,12 +2,22 @@ pipeline {
     agent any
 
     stages {
-        // Stage 1: Unit tests (we already did this)
-        stage('Unit & Integration Tests') {
+        // --- Your original stage, kept exactly as requested ---
+        stage('Unit and Integration Tests') {
             steps {
                 script {
-                    echo "--- Running Server Unit Tests ---"
+                    // Set PATH to include nvm Node.js location for this stage
+                    env.PATH = "/Users/dhruval/.nvm/versions/node/v20.19.5/bin:${env.PATH}"
+                    
+                    // Test client
+                    dir('client') {
+                        sh 'npm ci'
+                        sh 'npm test'
+                    }
+                    
+                    // Test server
                     dir('server') {
+                        // Using 'npm ci' to install devDependencies like Jest
                         sh 'npm ci'
                         sh 'npm test'
                     }
@@ -15,10 +25,13 @@ pipeline {
             }
         }
 
-        // Stage 2: Build and Run the Application in the background
+        // --- NEW STAGE: Build & Run App for E2E Testing ---
         stage('Build & Run App for E2E Testing') {
             steps {
                 script {
+                    // We must also set the PATH here so this stage can find npm
+                    env.PATH = "/Users/dhruval/.nvm/versions/node/v20.19.5/bin:${env.PATH}"
+
                     echo "--- Installing client dependencies ---"
                     dir('client') {
                         sh 'npm ci'
@@ -26,7 +39,7 @@ pipeline {
                     
                     echo "--- Starting Server ---"
                     dir('server') {
-                        // 'nohup' and '&' run the server in the background so the pipeline can continue
+                        // 'nohup' and '&' run the server in the background
                         sh 'nohup npm start &'
                     }
 
@@ -36,36 +49,38 @@ pipeline {
                     }
                     
                     echo "Waiting for servers to be ready..."
-                    // Give the servers time to start up before proceeding to the next stage
                     sh 'sleep 20'
                 }
             }
         }
 
-        // Stage 3: Run Cypress End-to-End Tests
+        // --- NEW STAGE: Run Cypress End-to-End Tests ---
         stage('Run Cypress E2E Tests') {
             steps {
-                // This 'xvfb' block creates the virtual screen for the browser
+                // This 'xvfb' block creates a virtual screen for the browser
                 xvfb {
-                    dir('client') {
-                        echo "--- Running Cypress Tests ---"
-                        // 'cypress run' executes all tests in headless mode
-                        sh 'npx cypress run --browser chrome'
+                    script {
+                        // And we set the PATH one more time for this stage to find npx
+                        env.PATH = "/Users/dhruval/.nvm/versions/node/v20.19.5/bin:${env.PATH}"
+                        
+                        dir('client') {
+                            echo "--- Running Cypress Tests ---"
+                            sh 'npx cypress run --browser chrome'
+                        }
                     }
                 }
             }
         }
     }
 
-    // This 'post' block runs after all stages are complete, regardless of success or failure
+    // This 'post' block runs after all stages are complete
     post {
         always {
             script {
                 echo "--- Tearing Down Application ---"
                 // Clean up the background processes to free up resources
-                // The '|| true' prevents the build from failing if the process is already gone
-                sh 'kill $(lsof -t -i:3000) || true' // Kill the server process on port 3000
-                sh 'kill $(lsof -t -i:5173) || true' // Kill the client process on port 5173
+                sh 'kill $(lsof -t -i:3000) || true'
+                sh 'kill $(lsof -t -i:5173) || true'
                 echo "Pipeline finished."
             }
         }
