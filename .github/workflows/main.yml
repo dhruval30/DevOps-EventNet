@@ -132,6 +132,7 @@ jobs:
 
       - name: Configure kubectl for GKE
         run: |
+          gcloud components install gke-gcloud-auth-plugin
           gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} \
             --zone ${{ secrets.GKE_ZONE }} \
             --project ${{ env.GCP_PROJECT_ID }}
