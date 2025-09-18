@@ -76,48 +76,59 @@ jobs:
   # -------------------------------------------------------
   build-and-push:
     needs: run-jenkins-pipeline
-    if: needs.run-jenkins-pipeline.outputs.result == 'SUCCESS'
     runs-on: ubuntu-latest
-    outputs:
-      server_image: ${{ steps.build-server.outputs.image }}
-      client_image: ${{ steps.build-client.outputs.image }}
     steps:
       - uses: actions/checkout@v4
 
+      # Authentication step - REQUIRED FIRST
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # Setup gcloud CLI
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
 
       - name: Build & push backend
-        id: build-server
         run: |
           SERVER_IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPO }}/server:${{ github.sha }}"
           docker build -t $SERVER_IMAGE -f server/Dockerfile server
           docker push $SERVER_IMAGE
-          echo "image=$SERVER_IMAGE" >> $GITHUB_OUTPUT
+          echo "SERVER_IMAGE=$SERVER_IMAGE" >> $GITHUB_ENV
 
       - name: Build & push frontend
-        id: build-client
         run: |
           CLIENT_IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPO }}/client:${{ github.sha }}"
           docker build -t $CLIENT_IMAGE -f client/Dockerfile client
           docker push $CLIENT_IMAGE
-          echo "image=$CLIENT_IMAGE" >> $GITHUB_OUTPUT
+          echo "CLIENT_IMAGE=$CLIENT_IMAGE" >> $GITHUB_ENV
 
+  # -------------------------------------------------------
+  # 3) Deploy to GKE
+  # -------------------------------------------------------
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      # Authentication step - REQUIRED FIRST
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # Setup gcloud CLI
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Configure kubectl for GKE
         run: |
@@ -128,5 +139,6 @@ jobs:
 
       - name: Deploy new images
         run: |
-          kubectl set image deployment/server nginx=${{ needs.build-and-push.outputs.server_image }} -n eventnet
-          kubectl set image deployment/client client=${{ needs.build-and-push.outputs.client_image }} -n eventnet
+          # Use "nginx" as the container name for the server deployment
+          kubectl set image deployment/server nginx=$SERVER_IMAGE -n eventnet
+          kubectl set image deployment/client client=$CLIENT_IMAGE -n eventnet
