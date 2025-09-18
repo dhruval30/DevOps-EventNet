@@ -84,7 +84,7 @@ pipeline {
                             ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \\
                             -t http://host.docker.internal:3000 \\
                             -r zap-report.html
-                            -f FAIL
+                            -l FAIL
                     '''
                 }
             }
