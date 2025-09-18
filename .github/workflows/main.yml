@@ -139,5 +139,6 @@ jobs:
 
       - name: Deploy new images
         run: |
-          kubectl set image deployment/server server=$SERVER_IMAGE -n eventnet
+          # Use "nginx" as the container name for the server deployment
+          kubectl set image deployment/server nginx=$SERVER_IMAGE -n eventnet
           kubectl set image deployment/client client=$CLIENT_IMAGE -n eventnet
