@@ -33,24 +33,41 @@ jobs:
         id: jenkins-status
         run: |
           echo "Waiting for Jenkins job to complete..."
+          
+          # Wait a bit for the job to actually start
+          sleep 10
+          
           while true; do
             BUILD_JSON=$(curl -s -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" \
               https://58a340d6848f.ngrok-free.app/job/EventNet/lastBuild/api/json)
             
             echo "DEBUG - Jenkins response: $BUILD_JSON"
             
-            RESULT=$(echo "$BUILD_JSON" | sed -n 's/.*"result":"\([^"]*\)".*/\1/p')
+            # Use Python to properly parse JSON and handle null values
+            RESULT=$(echo "$BUILD_JSON" | python3 -c "
+          import sys, json
+          try:
+              data = json.load(sys.stdin)
+              result = data.get('result')
+              print(result if result is not None else 'null')
+          except Exception as e:
+              print('null')
+          ")
+            
             echo "DEBUG - Extracted result: '$RESULT'"
             
-            if [ "$RESULT" != "" ] && [ "$RESULT" != "null" ]; then
+            if [ "$RESULT" != "null" ] && [ "$RESULT" != "" ]; then
               echo "result=$RESULT" >> $GITHUB_OUTPUT
               if [ "$RESULT" = "SUCCESS" ]; then
+                echo "Jenkins job completed successfully!"
                 exit 0
               else
-                echo "Jenkins failed with result: $RESULT"
+                echo "Jenkins job failed with result: $RESULT"
                 exit 1
               fi
             fi
+            
+            echo "Job still running, waiting 20 seconds..."
             sleep 20
           done
 
