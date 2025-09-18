@@ -25,7 +25,7 @@ jobs:
         run: |
           # Start the Jenkins job and capture queue URL
           QUEUE_URL=$(curl -s -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" \
-            -X POST "https://58a340d6848f.ngrok-free.app/job/EventNet/buildWithParameters?token=${{ secrets.JENKINS_BUILD_TOKEN }}" \
+            -X POST "https://58a340d6848f.ngrok-free.app/job/EventNet/build?token=${{ secrets.JENKINS_BUILD_TOKEN }}" \
             -D - | grep -i Location | awk '{print $2}' | tr -d '\r')
           echo "queue_url=$QUEUE_URL" >> $GITHUB_OUTPUT
 
