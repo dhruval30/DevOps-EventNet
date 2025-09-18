@@ -1,0 +1,14 @@
+// client/cypress.config.js
+import { defineConfig } from "cypress";
+
+export default defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:5173',
+    // Add these two lines to set a default desktop size for all tests
+    viewportWidth: 1280,
+    viewportHeight: 720,
+    setupNodeEvents(on, config) {
+      // implement node event listeners here
+    },
+  },
+});
