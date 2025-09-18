@@ -36,7 +36,7 @@ jobs:
           while true; do
             BUILD_JSON=$(curl -s -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" \
               https://58a340d6848f.ngrok-free.app/job/EventNet/lastBuild/api/json)
-            RESULT=$(echo "$BUILD_JSON" | jq -r '.result')
+            RESULT=$(echo "$BUILD_JSON" | grep -o '"result":"[^"]*"' | cut -d'"' -f4)
             if [ "$RESULT" != "null" ]; then
               echo "result=$RESULT" >> $GITHUB_OUTPUT
               [ "$RESULT" = "SUCCESS" ] && exit 0 || exit 1
